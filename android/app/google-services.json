@@ -1,0 +1,55 @@
+{
+  "project_info": {
+    "project_number": "55052199625",
+    "project_id": "loneliness-mtechub",
+    "storage_bucket": "loneliness-mtechub.appspot.com"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:55052199625:android:1b71bb544224086353cf18",
+        "android_client_info": {
+          "package_name": "com.lonelinessmtechub"
+        }
+      },
+      "oauth_client": [
+        {
+          "client_id": "55052199625-8p0lut6t0sd2jsdgs03g7flm568uck42.apps.googleusercontent.com",
+          "client_type": 1,
+          "android_info": {
+            "package_name": "com.lonelinessmtechub",
+            "certificate_hash": "b8083bef977c374a5da09bb3b25d528a723b7b11"
+          }
+        },
+        {
+          "client_id": "55052199625-m8dhmbokgdvf1cq7hs4edrfo92sjvark.apps.googleusercontent.com",
+          "client_type": 1,
+          "android_info": {
+            "package_name": "com.lonelinessmtechub",
+            "certificate_hash": "5e8f16062ea3cd2c4a0d547876baa6f38cabf625"
+          }
+        },
+        {
+          "client_id": "55052199625-vc17lav922f1ejtkmn2op958euv3ojcd.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
+      "api_key": [
+        {
+          "current_key": "AIzaSyB8HiOSxlsvABB1mk-76DhJBSBqk388jT8"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": [
+            {
+              "client_id": "55052199625-vc17lav922f1ejtkmn2op958euv3ojcd.apps.googleusercontent.com",
+              "client_type": 3
+            }
+          ]
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
