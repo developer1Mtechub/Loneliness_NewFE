@@ -43,7 +43,7 @@ import CustomTextInput from '../../../../components/TextInputComponent';
 import MaterialIcons from 'react-native-vector-icons/MaterialIcons'
 import { useNavigation } from '@react-navigation/native';
 import { useDispatch, useSelector } from 'react-redux';
-import { getAllNearbyBuddy } from '../../../../redux/UserDashboard/getAllNearbyBuddySlice';
+import { getAllNearbyBuddy, resetNearbyData } from '../../../../redux/UserDashboard/getAllNearbyBuddySlice';
 import { getAddressByLatLong } from '../../../../redux/getAddressByLatLongSlice';
 import { setIsAppOpened } from '../../../../redux/appOpenedSlice';
 import { setRoute } from '../../../../redux/appSlice';
@@ -72,8 +72,13 @@ import { Dropdown } from 'react-native-element-dropdown';
 import { getAllCategories } from '../../../../redux/getAllCategoriesSlice';
 import { openPaymentSheet } from '../../../../utils/paymentUtils';
 import { getUserDetail } from '../../../../redux/BuddyDashboard/userLikesDetailSlice';
+import { reverseGeocode } from '../../../../utils/geoCodeUtils';
 
 const { width: screenWidth, height: screenHeight } = Dimensions.get('window');
+
+const window = Dimensions.get('window');
+
+let screenIndex = 0;
 
 
 const UserHomeContent = ({ showFilterModal, setFilterModal, setFilter }) => {
@@ -125,6 +130,8 @@ const UserHomeContent = ({ showFilterModal, setFilterModal, setFilter }) => {
     const [keyboardStatus, setKeyboardStatus] = useState(false);
     const [selectedValue, setSelectedValue] = useState('');
     const [socket, setSocket] = useState(null);
+    const scrollViewRef = useRef(null);
+    const [placeName, setPlaceName] = useState('')
     const [form, setForm] = useState({
         category: '',
         city: '',
@@ -139,7 +146,7 @@ const UserHomeContent = ({ showFilterModal, setFilterModal, setFilter }) => {
         gender: '',
         latitude: 0,
         longitude: 0,
-        distance: 500000000,
+        distance: 3200,
         page: 1,
         limit: 10,
         min_age: 0,
@@ -153,13 +160,20 @@ const UserHomeContent = ({ showFilterModal, setFilterModal, setFilter }) => {
         dispatch(getUserDetail(id))
     }, [dispatch, id])
 
-    // if (userDetail) {
-    //     const { longitude, latitude } = userDetail?.location
-    //     dispatch(getAddressByLatLong({
-    //         lat: latitude,
-    //         long: longitude
-    //     }));
-    // }
+
+    const handleLocation = async () => {
+
+        if (currentUser) {
+            const { longitude, latitude } = currentUser?.location
+            const address = await reverseGeocode(latitude, longitude);
+            setPlaceName(address)
+        }
+    };
+
+    useEffect(() => {
+        handleLocation();
+        // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, [currentUser])
 
 
     const getAllNearByBuddies = async () => {
@@ -444,11 +458,16 @@ const UserHomeContent = ({ showFilterModal, setFilterModal, setFilter }) => {
                 }, // Apply rotation if it's a dislike action
                 ]
             }]}>
-            <Image
-                source={{ uri: item }}
-                style={styles.carouselImage}
-                resizeMode="contain"
-            />
+            <TouchableOpacity
+                activeOpacity={1}
+                onPress={() => { scrollUp() }}
+                style={styles.carouselImageContainer}>
+                <Image
+                    source={{ uri: item }}
+                    style={styles.carouselImage}
+                    resizeMode="contain"
+                />
+            </TouchableOpacity>
             <LinearGradient
                 colors={['transparent', theme.dark.primary]}
                 style={styles.gradientOverlay}
@@ -485,6 +504,7 @@ const UserHomeContent = ({ showFilterModal, setFilterModal, setFilter }) => {
     };
 
     const applyFilter = () => {
+        dispatch(resetNearbyData())
         setFilterModal(false)
         setFilter(true)
         setFilterApplied(true)
@@ -1378,6 +1398,10 @@ const UserHomeContent = ({ showFilterModal, setFilterModal, setFilter }) => {
         );
     };
 
+    const scrollUp = () => {
+        scrollViewRef.current.scrollTo({ x: 500, animated: true });
+    };
+
     return (
         <LinearGradient
             colors={[theme.dark.primary, '#4C4615', '#4C4615']}
@@ -1423,426 +1447,429 @@ const UserHomeContent = ({ showFilterModal, setFilterModal, setFilter }) => {
                         </Text>
                     </View>
                 </>
-            ) : (response?.data?.length > 0 || filteredData?.data?.length > 0) ? <SafeAreaView style={styles.container}>
+            ) : (response?.data?.length > 0 || filteredData?.data?.length > 0 || currentUser != undefined) ?
+                <SafeAreaView style={styles.container}>
 
-                {(
-                    <ScrollView
-                        onScroll={handleScroll}
-                        scrollEventThrottle={1}
-                        style={[styles.carouselContainer, { backgroundColor: getBackgroundColor() }]}>
-                        <FlatList
-                            data={currentUser?.image_urls}
-                            horizontal
-                            pagingEnabled
-                            showsHorizontalScrollIndicator={false}
-                            onScroll={(e) => {
-                                const index = Math.round(e.nativeEvent.contentOffset.x / screenWidth);
-                                setActiveIndex(index);
-                            }}
-                            renderItem={renderItem}
-                            keyExtractor={(item, index) => index.toString()}
-                        />
+                    {(
+                        <ScrollView
+                            ref={scrollViewRef}
+                            onScroll={handleScroll}
+                            scrollEventThrottle={16}
+                            style={[styles.carouselContainer, { backgroundColor: getBackgroundColor() }]}>
+                            <FlatList
+                                data={currentUser?.image_urls}
+                                horizontal
+                                pagingEnabled
+                                showsHorizontalScrollIndicator={false}
+                                onScroll={(e) => {
+                                    const index = Math.round(e.nativeEvent.contentOffset.x / screenWidth);
+                                    setActiveIndex(index);
+                                }}
+                                renderItem={renderItem}
+                                keyExtractor={(item, index) => index.toString()}
+                            />
 
 
-                        {currentUser?.image_urls?.length > 0 && <View style={styles.dotContainer}>
-                            {currentUser?.image_urls?.map((_, index) => (
-                                <View
-                                    key={index}
-                                    style={[
-                                        styles.dot,
-                                        { backgroundColor: index === activeIndex ? theme.dark.secondary : 'rgba(17, 17, 17, 1)' },
-                                    ]}
-                                />
-                            ))}
-                        </View>}
+                            {currentUser?.image_urls?.length > 0 && <View style={styles.dotContainer}>
+                                {currentUser?.image_urls?.map((_, index) => (
+                                    <View
+                                        key={index}
+                                        style={[
+                                            styles.dot,
+                                            { backgroundColor: index === activeIndex ? theme.dark.secondary : 'rgba(17, 17, 17, 1)' },
+                                        ]}
+                                    />
+                                ))}
+                            </View>}
 
-                        <View style={styles.overlay}>
-                            <View style={{ flexDirection: 'row' }}>
-                                <Text style={styles.nameText}>
-                                    {`${currentUser?.full_name} (${calculateAge(currentUser?.dob)})`}
-                                </Text>
-                                <TouchableOpacity onPress={() => {
-                                    handleChatPayment(currentUser?.id)
-                                }}>
-                                    <Image source={chatHome} style={{
-                                        width: scaleWidth(60),
-                                        height: scaleHeight(60),
-                                        alignSelf: 'center',
-                                        marginEnd: 20,
-                                        top: scaleHeight(20)
-
-                                    }} />
-                                </TouchableOpacity>
-                            </View>
-                            <Text style={styles.distanceText}>
-                                {`${convertMetersToKm(currentUser?.distance)} km away`}
-                            </Text>
-                            <View style={styles.actionButtons}>
-                                <TouchableOpacity
-                                    onPress={() => {
-                                        if (userCurrentIndex === 2) {
-                                            dispatch(setIsPremium(false))
-                                        }
-                                        if (!is_subscribed && !isPremiumPlan) {
-                                            handleOpenModal1();
-                                        } else {
-                                            handleLikeDislike(false)
-                                            handleDislike(activeIndex)
-                                        }
-                                    }}
-                                    style={styles.iconButton}>
-                                    {/* <Icon name="close" type="material" color="#ff4d4d" /> */}
-                                    <Image source={disLikeHome}
-                                        resizeMode='contain'
-                                        style={{
-                                            width: scaleWidth(50),
-                                            height: scaleHeight(50),
-                                            alignSelf: 'center',
-                                            //right: scaleWidth(-20),
-
-                                        }} />
-                                </TouchableOpacity>
-                                <TouchableOpacity
-                                    onPress={() => {
-
-                                        if (userCurrentIndex === 2) {
-                                            dispatch(setIsPremium(false))
-                                        }
-                                        if (!is_subscribed && !isPremiumPlan) {
-                                            handleOpenModal1();
-                                        } else {
-                                            handleLikeDislike(true)
-                                            like(activeIndex);
-                                        }
-                                    }}
-                                    style={styles.iconButton2}>
-                                    {/* <Icon name="favorite" type="material" color={theme.dark.secondary} /> */}
-                                    <Image source={likeHome}
-                                        resizeMode='contain'
-                                        style={{
+                            <View style={styles.overlay}>
+                                <View style={{ flexDirection: 'row' }}>
+                                    <Text style={styles.nameText}>
+                                        {`${currentUser?.full_name} (${calculateAge(currentUser?.dob)})`}
+                                    </Text>
+                                    <TouchableOpacity onPress={() => {
+                                        handleChatPayment(currentUser?.id)
+                                    }}>
+                                        <Image source={chatHome} style={{
                                             width: scaleWidth(60),
                                             height: scaleHeight(60),
                                             alignSelf: 'center',
-                                            //right: scaleWidth(-20),
+                                            marginEnd: 20,
+                                            top: scaleHeight(20)
 
                                         }} />
-                                </TouchableOpacity>
-                                <TouchableOpacity
-                                    onPress={() => {
-                                        handleRequestBuddy()
-                                    }}
-                                    style={styles.iconButton3}>
-                                    {/* <Icon name="send" type="material" color="#4da6ff" /> */}
-                                    <Image source={sendHome}
+                                    </TouchableOpacity>
+                                </View>
+                                <Text style={styles.distanceText}>
+                                    {`${convertMetersToKm(currentUser?.distance)} km away`}
+                                </Text>
+                                <View style={styles.actionButtons}>
+                                    <TouchableOpacity
+                                        onPress={() => {
+                                            if (userCurrentIndex === 2) {
+                                                dispatch(setIsPremium(false))
+                                            }
+                                            if (!is_subscribed && !isPremiumPlan) {
+                                                handleOpenModal1();
+                                            } else {
+                                                handleLikeDislike(false)
+                                                handleDislike(activeIndex)
+                                            }
+                                        }}
+                                        style={styles.iconButton}>
+                                        {/* <Icon name="close" type="material" color="#ff4d4d" /> */}
+                                        <Image source={disLikeHome}
+                                            resizeMode='contain'
+                                            style={{
+                                                width: scaleWidth(50),
+                                                height: scaleHeight(50),
+                                                alignSelf: 'center',
+                                                //right: scaleWidth(-20),
+
+                                            }} />
+                                    </TouchableOpacity>
+                                    <TouchableOpacity
+                                        onPress={() => {
+
+                                            if (userCurrentIndex === 2) {
+                                                dispatch(setIsPremium(false))
+                                            }
+                                            if (!is_subscribed && !isPremiumPlan) {
+                                                handleOpenModal1();
+                                            } else {
+                                                handleLikeDislike(true)
+                                                like(activeIndex);
+                                            }
+                                        }}
+                                        style={styles.iconButton2}>
+                                        {/* <Icon name="favorite" type="material" color={theme.dark.secondary} /> */}
+                                        <Image source={likeHome}
+                                            resizeMode='contain'
+                                            style={{
+                                                width: scaleWidth(60),
+                                                height: scaleHeight(60),
+                                                alignSelf: 'center',
+                                                //right: scaleWidth(-20),
+
+                                            }} />
+                                    </TouchableOpacity>
+                                    <TouchableOpacity
+                                        onPress={() => {
+                                            handleRequestBuddy()
+                                        }}
+                                        style={styles.iconButton3}>
+                                        {/* <Icon name="send" type="material" color="#4da6ff" /> */}
+                                        <Image source={sendHome}
+                                            resizeMode='contain'
+                                            style={{
+                                                width: scaleWidth(50),
+                                                height: scaleHeight(50),
+                                                alignSelf: 'center',
+                                                //right: scaleWidth(-20),
+
+                                            }} />
+                                    </TouchableOpacity>
+                                </View>
+                            </View>
+
+                            <View style={styles.detailContainer}>
+
+                                <View style={styles.profileDescription}>
+
+
+                                    <Text style={{
+                                        color: theme.dark.secondary,
+                                        fontSize: scaleHeight(18),
+                                        fontFamily: fonts.fontsType.medium,
+
+                                    }}>
+                                        About
+                                    </Text>
+
+                                    <TouchableOpacity
+                                        onPress={() => {
+                                            handleBuddyRatingNav()
+                                        }}
+                                        style={{
+                                            flexDirection: 'row',
+                                            alignSelf: 'center'
+                                        }}>
+
+                                        <Image
+                                            resizeMode='cover'
+                                            style={{
+
+                                                width: scaleWidth(18),
+                                                height: scaleHeight(18),
+                                                alignSelf: 'center',
+                                                marginHorizontal: 5
+                                            }} source={ratingStar} />
+
+                                        <Text style={{
+                                            color: theme.dark.inputLabel,
+                                            fontSize: scaleHeight(15),
+                                            fontFamily: fonts.fontsType.medium
+                                        }}>
+                                            {
+                                                currentUser?.avg_rating > 0 ? parseInt(currentUser?.avg_rating)?.toFixed(1) : 0
+                                            }
+                                        </Text>
+
+                                    </TouchableOpacity>
+
+                                </View>
+
+                                <Text style={{
+                                    color: theme.dark.inputLabel,
+                                    fontSize: scaleHeight(15),
+                                    fontFamily: fonts.fontsType.light,
+                                    lineHeight: scaleHeight(28),
+                                    marginBottom: scaleHeight(20)
+                                }}>
+                                    {currentUser?.about}
+                                </Text>
+
+                                <DetailItem label="Gender" value={currentUser?.gender} />
+                                <DetailItem label="Height" value={`${currentUser?.height_ft}'${currentUser?.height_in}`} />
+                                <DetailItem label="Weight" value={`${currentUser?.weight} ${currentUser?.weight_unit}`} />
+                                <DetailItem label="Hourly Rate" value={`$${currentUser?.hourly_rate}`} />
+                                <DetailItem label="Languages" value={`${currentUser?.languages !== null &&
+                                    currentUser?.languages != undefined ? JSON.parse(currentUser?.languages) : ''}`} />
+                                {/* <DetailItem label="Location" value={`${currentUser?.location?.city && currentUser?.location?.city}, ${currentUser?.location?.city && currentUser?.location?.city}`} /> */}
+
+                                <View style={{
+                                    flexDirection: 'row',
+                                    marginTop: scaleHeight(20),
+                                    marginHorizontal: -5
+                                }}>
+
+                                    <Image
                                         resizeMode='contain'
                                         style={{
-                                            width: scaleWidth(50),
-                                            height: scaleHeight(50),
+
+                                            width: scaleWidth(22),
+                                            height: scaleHeight(22),
                                             alignSelf: 'center',
-                                            //right: scaleWidth(-20),
 
-                                        }} />
-                                </TouchableOpacity>
-                            </View>
-                        </View>
+                                        }} source={locationPin} />
 
-                        <View style={styles.detailContainer}>
+                                    <Text style={{
+                                        color: theme.dark.white,
+                                        fontSize: scaleHeight(16),
+                                        fontFamily: fonts.fontsType.medium,
+                                        marginHorizontal: 5
+                                    }}>
 
-                            <View style={styles.profileDescription}>
+                                        {currentUser?.location?.country && currentUser?.location?.city ?
+                                            `${currentUser.location.country}, ${currentUser.location.city}` :
+                                            placeName ||
+                                            'Location not available'
+                                        }
+                                    </Text>
 
+                                </View>
 
                                 <Text style={{
                                     color: theme.dark.secondary,
                                     fontSize: scaleHeight(18),
                                     fontFamily: fonts.fontsType.medium,
+                                    marginTop: scaleHeight(40)
 
                                 }}>
-                                    About
+                                    Categories
                                 </Text>
 
-                                <TouchableOpacity
-                                    onPress={() => {
-                                        handleBuddyRatingNav()
-                                    }}
-                                    style={{
-                                        flexDirection: 'row',
-                                        alignSelf: 'center'
-                                    }}>
-
-                                    <Image
-                                        resizeMode='cover'
-                                        style={{
-
-                                            width: scaleWidth(18),
-                                            height: scaleHeight(18),
-                                            alignSelf: 'center',
-                                            marginHorizontal: 5
-                                        }} source={ratingStar} />
-
-                                    <Text style={{
-                                        color: theme.dark.inputLabel,
-                                        fontSize: scaleHeight(15),
-                                        fontFamily: fonts.fontsType.medium
-                                    }}>
-                                        {
-                                            currentUser?.avg_rating > 0 ? parseInt(currentUser?.avg_rating)?.toFixed(1) : 0
-                                        }
-                                    </Text>
-
-                                </TouchableOpacity>
-
-                            </View>
-
-                            <Text style={{
-                                color: theme.dark.inputLabel,
-                                fontSize: scaleHeight(15),
-                                fontFamily: fonts.fontsType.light,
-                                lineHeight: scaleHeight(28),
-                                marginBottom: scaleHeight(20)
-                            }}>
-                                {currentUser?.about}
-                            </Text>
-
-                            <DetailItem label="Gender" value={currentUser?.gender} />
-                            <DetailItem label="Height" value={`${currentUser?.height_ft}'${currentUser?.height_in}`} />
-                            <DetailItem label="Weight" value={`${currentUser?.weight} ${currentUser?.weight_unit}`} />
-                            <DetailItem label="Hourly Rate" value={`$${currentUser?.hourly_rate}`} />
-                            <DetailItem label="Languages" value={`${currentUser?.languages !== null && 
-                                currentUser?.languages != undefined ? JSON.parse(currentUser?.languages) : ''}`} />
-                            {/* <DetailItem label="Location" value={`${currentUser?.location?.city && currentUser?.location?.city}, ${currentUser?.location?.city && currentUser?.location?.city}`} /> */}
-
-                            <View style={{
-                                flexDirection: 'row',
-                                marginTop: scaleHeight(20),
-                                marginHorizontal: -5
-                            }}>
-
-                                <Image
-                                    resizeMode='contain'
-                                    style={{
-
-                                        width: scaleWidth(22),
-                                        height: scaleHeight(22),
-                                        alignSelf: 'center',
-
-                                    }} source={locationPin} />
-
-                                <Text style={{
-                                    color: theme.dark.white,
-                                    fontSize: scaleHeight(16),
-                                    fontFamily: fonts.fontsType.medium,
-                                    marginHorizontal: 5
+                                <View style={{
+                                    marginHorizontal: -5,
+                                    marginTop: scaleHeight(5)
                                 }}>
+                                    <CategoryList
+                                        categories={currentUser?.categories}
+                                        isPress={false}
+                                    />
 
-                                    {currentUser?.location?.country && currentUser?.location?.city ?
-                                        `${currentUser.location.country}, ${currentUser.location.city}` :
-                                        (address?.city || address?.town) && address?.country ?
-                                            `${address.city || address.town}, ${address.country}` :
-                                            'Location not available'
-                                    }
-                                </Text>
+                                </View>
 
-                            </View>
+                                <View>
+                                    {images?.length > 0 && (
+                                        <TouchableOpacity onPress={() => {
+                                            handlePress(0)
+                                        }}>
+                                            <Image
+                                                style={{
+                                                    width: '100%',
+                                                    height: scaleHeight(300),
+                                                    marginTop: scaleHeight(10),
+                                                    borderRadius: 10
+                                                }}
+                                                source={{ uri: images[0] }}
+                                            />
+                                        </TouchableOpacity>
+                                    )}
 
-                            <Text style={{
-                                color: theme.dark.secondary,
-                                fontSize: scaleHeight(18),
-                                fontFamily: fonts.fontsType.medium,
-                                marginTop: scaleHeight(40)
-
-                            }}>
-                                Categories
-                            </Text>
-
-                            <View style={{
-                                marginHorizontal: -5,
-                                marginTop: scaleHeight(5)
-                            }}>
-                                <CategoryList
-                                    categories={currentUser?.categories}
-                                    isPress={false}
-                                />
-
-                            </View>
-
-                            <View>
-                                {images?.length > 0 && (
-                                    <TouchableOpacity onPress={() => {
-                                        handlePress(0)
-                                    }}>
-                                        <Image
-                                            style={{
-                                                width: '100%',
-                                                height: scaleHeight(300),
-                                                marginTop: scaleHeight(10),
-                                                borderRadius: 10
-                                            }}
-                                            source={{ uri: images[0] }}
-                                        />
-                                    </TouchableOpacity>
-                                )}
-
-                                {images?.length > 1 && (
-                                    <View style={{ flexDirection: 'row', justifyContent: 'space-between' }}>
-                                        {images?.slice(1, 3).map((image, index) => (
-                                            image && <TouchableOpacity key={index} onPress={() => {
-                                                handlePress(index + 1)
-                                            }}>
-                                                <Image
-                                                    style={{
-                                                        width: scaleWidth(150),
-                                                        height: scaleHeight(230),
-                                                        marginTop: scaleHeight(10),
-                                                        borderRadius: 10
-                                                    }}
-                                                    source={{ uri: image }}
-                                                />
-                                            </TouchableOpacity>
-                                        ))}
-                                    </View>
-                                )}
-                            </View>
-
-                            <Button
-                                onPress={() => {
-                                    handleRequestBuddy();
-                                }}
-                                title={"Send Request"}
-                                customStyle={{
-                                    width: '95%',
-                                    top: scaleHeight(30)
-                                }}
-                                textCustomStyle={{
-                                }}
-                            />
-
-                            <View style={{
-                                flexDirection: 'row',
-                                justifyContent: 'space-between',
-                                marginBottom: scaleHeight(-160)
-                            }}>
+                                    {images?.length > 1 && (
+                                        <View style={{ flexDirection: 'row', justifyContent: 'space-between' }}>
+                                            {images?.slice(1, 3).map((image, index) => (
+                                                image && <TouchableOpacity key={index} onPress={() => {
+                                                    handlePress(index + 1)
+                                                }}>
+                                                    <Image
+                                                        style={{
+                                                            width: scaleWidth(150),
+                                                            height: scaleHeight(230),
+                                                            marginTop: scaleHeight(10),
+                                                            borderRadius: 10
+                                                        }}
+                                                        source={{ uri: image }}
+                                                    />
+                                                </TouchableOpacity>
+                                            ))}
+                                        </View>
+                                    )}
+                                </View>
 
                                 <Button
                                     onPress={() => {
-                                        handleReportBuddy();
+                                        handleRequestBuddy();
                                     }}
-                                    title={"Report"}
+                                    title={"Send Request"}
                                     customStyle={{
-                                        width: '48%',
-                                        borderWidth: 1,
-                                        borderColor: theme.dark.secondary,
-                                        backgroundColor: theme.dark.transparentBg,
+                                        width: '95%',
+                                        top: scaleHeight(30)
                                     }}
                                     textCustomStyle={{
-                                        color: theme.dark.secondary,
-                                        marginRight: '2%',
                                     }}
                                 />
 
-                                <Button title={"Block"}
-                                    onPress={() => {
-                                        handleOpenModal();
-                                    }}
-                                    customStyle={{
-                                        width: '48%',
-                                        borderWidth: 1,
-                                        borderColor: theme.dark.secondary,
-                                        backgroundColor: theme.dark.transparentBg
-                                    }}
-                                    textCustomStyle={{
-                                        color: theme.dark.secondary
-                                    }}
-                                />
+                                <View style={{
+                                    flexDirection: 'row',
+                                    justifyContent: 'space-between',
+                                    marginBottom: scaleHeight(-160)
+                                }}>
+
+                                    <Button
+                                        onPress={() => {
+                                            handleReportBuddy();
+                                        }}
+                                        title={"Report"}
+                                        customStyle={{
+                                            width: '48%',
+                                            borderWidth: 1,
+                                            borderColor: theme.dark.secondary,
+                                            backgroundColor: theme.dark.transparentBg,
+                                        }}
+                                        textCustomStyle={{
+                                            color: theme.dark.secondary,
+                                            marginRight: '2%',
+                                        }}
+                                    />
+
+                                    <Button title={"Block"}
+                                        onPress={() => {
+                                            handleOpenModal();
+                                        }}
+                                        customStyle={{
+                                            width: '48%',
+                                            borderWidth: 1,
+                                            borderColor: theme.dark.secondary,
+                                            backgroundColor: theme.dark.transparentBg
+                                        }}
+                                        textCustomStyle={{
+                                            color: theme.dark.secondary
+                                        }}
+                                    />
+
+                                </View>
 
                             </View>
 
-                        </View>
+                        </ScrollView>
+                    )}
 
-                    </ScrollView>
-                )}
+                    <CustomModal
+                        isVisible={modalVisible1}
+                        onClose={handleCloseModal1}
+                        headerTitle={"Unlock More Friendships!"}
+                        imageSource={lockImg}
+                        text={`Want to meet more amazing friends? Unlock additional profiles with our premium access. Discover endless possibilities and connections!`}
+                        buttonText="Go Premium"
+                        isParallelButton={false}
+                        isCross={true}
+                        buttonAction={() => {
+                            handlePremium();
+                        }}
+                    />
 
-                <CustomModal
-                    isVisible={modalVisible1}
-                    onClose={handleCloseModal1}
-                    headerTitle={"Unlock More Friendships!"}
-                    imageSource={lockImg}
-                    text={`Want to meet more amazing friends? Unlock additional profiles with our premium access. Discover endless possibilities and connections!`}
-                    buttonText="Go Premium"
-                    isParallelButton={false}
-                    isCross={true}
-                    buttonAction={() => {
-                        handlePremium();
-                    }}
-                />
+                    <CustomModal
+                        isVisible={modalVisible2}
+                        onClose={handleCloseModal2}
+                        headerTitle={"Opps!"}
+                        imageSource={warningImg}
+                        isParallelButton={true}
+                        text={`Unlock the conversation for only $1 and dive into an engaging chat experience with us! 💬✨`}
+                        parallelButtonText1={"Cancel"}
+                        parallelButtonText2={"Pay Now!"}
+                        parallelButtonPress1={() => {
+                            handleCloseModal2()
+                        }}
+                        parallelButtonPress2={() => {
+                            handleCloseModal2()
+                            handleOpenModal3();
+                        }}
+                    />
 
-                <CustomModal
-                    isVisible={modalVisible2}
-                    onClose={handleCloseModal2}
-                    headerTitle={"Opps!"}
-                    imageSource={warningImg}
-                    isParallelButton={true}
-                    text={`Unlock the conversation for only $1 and dive into an engaging chat experience with us! 💬✨`}
-                    parallelButtonText1={"Cancel"}
-                    parallelButtonText2={"Pay Now!"}
-                    parallelButtonPress1={() => {
-                        handleCloseModal2()
-                    }}
-                    parallelButtonPress2={() => {
-                        handleCloseModal2()
-                        handleOpenModal3();
-                    }}
-                />
+                    <CustomModal
+                        isVisible={modalVisible3}
+                        onClose={handleCloseModal3}
+                        headerTitle={"Payment Method"}
+                        imageSource={warningImg}
+                        secondaryLoader={paymentTransferLoader}
+                        isParallelButton={false}
+                        // text={`Do you want to pay through your wallet?`}
+                        text={`Do you want to pay through your paypal?`}
+                        parallelButtonText1={"Wallet"}
+                        parallelButtonText2={"PayPal"}
+                        buttonText={'PayPal'}
+                        buttonAction={() => {
+                            payPalWebviewNav();
+                            //openPaymentSheet(100, handleWalletPayment, 'user@gmail.com', 'usd', 'Test User')
+                            //setOverlayOpened(true);
+                            handleCloseModal3();
+                        }}
+                        parallelButtonPress1={() => {
+                            handleWalletPayment("WALLET");
+                        }}
+                        parallelButtonPress2={() => {
+                            payPalWebviewNav();
+                            //openPaymentSheet(100, handleWalletPayment, 'user@gmail.com', 'usd', 'Test User')
+                            //setOverlayOpened(true);
+                            handleCloseModal3();
+                        }}
+                    />
 
-                <CustomModal
-                    isVisible={modalVisible3}
-                    onClose={handleCloseModal3}
-                    headerTitle={"Payment Method"}
-                    imageSource={warningImg}
-                    secondaryLoader={paymentTransferLoader}
-                    isParallelButton={false}
-                    // text={`Do you want to pay through your wallet?`}
-                    text={`Do you want to pay through your paypal?`}
-                    parallelButtonText1={"Wallet"}
-                    parallelButtonText2={"PayPal"}
-                    buttonText={'PayPal'}
-                    buttonAction={() => {
-                        payPalWebviewNav();
-                        //openPaymentSheet(100, handleWalletPayment, 'user@gmail.com', 'usd', 'Test User')
-                        //setOverlayOpened(true);
-                        handleCloseModal3();
-                    }}
-                    parallelButtonPress1={() => {
-                        handleWalletPayment("WALLET");
-                    }}
-                    parallelButtonPress2={() => {
-                        payPalWebviewNav();
-                        //openPaymentSheet(100, handleWalletPayment, 'user@gmail.com', 'usd', 'Test User')
-                        //setOverlayOpened(true);
-                        handleCloseModal3();
-                    }}
-                />
+                    <CustomModal
+                        isVisible={modalVisible}
+                        //loading={blockUserLoader}
+                        onClose={handleCloseModal}
+                        headerTitle={"Block User?"}
+                        imageSource={blockUser}
+                        isParallelButton={true}
+                        text={`Are you sure you want to Block ${currentUser?.full_name}?`}
+                        parallelButtonText1={"Cancel"}
+                        parallelButtonText2={"Yes, Block"}
+                        parallelButtonPress1={() => {
+                            handleCloseModal()
+                        }}
+                        parallelButtonPress2={() => {
+                            handleBlockUser();
+                        }}
+                    />
 
-                <CustomModal
-                    isVisible={modalVisible}
-                    //loading={blockUserLoader}
-                    onClose={handleCloseModal}
-                    headerTitle={"Block User?"}
-                    imageSource={blockUser}
-                    isParallelButton={true}
-                    text={`Are you sure you want to Block ${currentUser?.full_name}?`}
-                    parallelButtonText1={"Cancel"}
-                    parallelButtonText2={"Yes, Block"}
-                    parallelButtonPress1={() => {
-                        handleCloseModal()
-                    }}
-                    parallelButtonPress2={() => {
-                        handleBlockUser();
-                    }}
-                />
+                    {isOverlayOpened && Overlay()}
 
-                {isOverlayOpened && Overlay()}
-
-            </SafeAreaView> : <EmptyListComponent title={"Buddies not found."} />
+                </SafeAreaView>
+                :
+                <EmptyListComponent title={"Buddies not found."} />
 
             }
             {renderFilterModal()}
@@ -1914,13 +1941,18 @@ const styles = StyleSheet.create({
         justifyContent: 'center',
         alignItems: 'center',
     },
-    carouselImage: {
+    carouselImageContainer: {
         width: '85%',
         height: '75%',
         marginBottom: scaleHeight(120),
         borderRadius: 20,
         // opacity:0.7,
         // backgroundColor:'rgba(0, 0, 0, 0.7)'
+    },
+    carouselImage: {
+        width: '100%',
+        height: '100%',
+        borderRadius: 20,
     },
     overlay: {
         position: 'absolute',

@@ -31,7 +31,10 @@ const CustomModal = ({
     secondaryLoader,
     isCross = false,
     modalCustomTextStyle,
-    customModalStyle
+    customModalStyle,
+    buttonStyle,
+    buttonTextStyle,
+    secondaryButtonStyle
 }) => {
     return (
         <Modal
@@ -85,29 +88,15 @@ const CustomModal = ({
                             title={parallelButtonText1}
                             onPress={parallelButtonPress1}
                             isBgTransparent={true}
-                            customStyle={{
-                                width: '48%',
-                                marginHorizontal: '2%',
-                                backgroundColor: theme.dark.transparentBg,
-                                borderWidth: 1,
-                                borderColor: theme.dark.secondary,
-                                marginBottom: scaleHeight(0)
-                            }}
-                            textCustomStyle={{
-                                color: theme.dark.secondary,
-                                fontFamily: fonts.fontsType.bold,
-                                fontSize: scaleHeight(12),
-                            }}
+                            customStyle={[styles.customButtonStyle, buttonStyle]}
+                            textCustomStyle={[styles.customTextStyle, buttonTextStyle]}
                         />
 
                         <Button
                             loading={loading === true && loading}
                             title={parallelButtonText2}
                             onPress={parallelButtonPress2}
-                            customStyle={{
-                                width: '48%',
-                                marginBottom: scaleHeight(0)
-                            }}
+                            customStyle={[styles.buttonSecondary,secondaryButtonStyle]}
                             textCustomStyle={{
                                 fontFamily: fonts.fontsType.bold,
                                 fontSize: scaleHeight(13),
@@ -159,6 +148,23 @@ const styles = StyleSheet.create({
         marginTop: scaleHeight(-15),
         marginBottom: scaleHeight(-10),
         marginEnd: scaleHeight(-15)
+    },
+    customButtonStyle: {
+        width: '48%',
+        marginHorizontal: '2%',
+        backgroundColor: theme.dark.transparentBg,
+        borderWidth: 1,
+        borderColor: theme.dark.secondary,
+        marginBottom: scaleHeight(0)
+    },
+    customTextStyle: {
+        color: theme.dark.secondary,
+        fontFamily: fonts.fontsType.bold,
+        fontSize: scaleHeight(12),
+    },
+    buttonSecondary: {
+        width: '48%',
+        marginBottom: scaleHeight(0)
     }
 });
 

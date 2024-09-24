@@ -167,7 +167,7 @@ const BuddyServicesContent = ({ setCurrentIndex, initialIndex = 0, searchQuery }
                         />
                     </View> :
                         (
-                            <ScrollView
+                            !refreshing && <ScrollView
                                 contentContainerStyle={{ flex: 1 }}
                                 refreshControl={
                                     <RefreshControl

@@ -26,7 +26,11 @@ export const getAllNearbyBuddy = createAsyncThunk(
 const getAllNearbyBuddySlice = createSlice({
     name: 'nearByBuddy',
     initialState,
-    reducers: {},
+    reducers: {
+        resetNearbyData(state) {
+            state.response = null;
+        },
+    },
     extraReducers: (builder) => {
         builder
             .addCase(getAllNearbyBuddy.pending, (state) => {
@@ -43,5 +47,5 @@ const getAllNearbyBuddySlice = createSlice({
             });
     },
 });
-
+export const { resetNearbyData } = getAllNearbyBuddySlice.actions;
 export default getAllNearbyBuddySlice.reducer;

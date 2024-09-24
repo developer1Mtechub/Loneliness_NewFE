@@ -17,7 +17,7 @@ import fonts from '../../../../styles/fonts';
 import HorizontalDivider from '../../../../components/HorizontalDivider';
 import { setRoute } from '../../../../redux/appSlice';
 
-const NotificationSection = ({ date, notifications, onPress }) => {
+const NotificationSection = ({ date, notifications, onPress, index }) => {
     return (
         <View style={styles.sectionContainer}>
             <View style={styles.dateContainer}>
@@ -25,7 +25,7 @@ const NotificationSection = ({ date, notifications, onPress }) => {
                 <HorizontalDivider customStyle={{ width: '60%' }} />
             </View>
             {notifications.map(notification => (
-                <NotificationItem onPress={onPress} key={notification.id} item={notification} />
+                <NotificationItem onPress={onPress} key={notification.id} item={notification} index={index} />
             ))}
         </View>
     );
@@ -111,8 +111,8 @@ const Notification = ({ navigation }) => {
         }
     }
 
-    const renderSection = ({ item }) => (
-        <NotificationSection onPress={() => { handleNotificationPress(groupedNotifications[item]) }} date={item} notifications={groupedNotifications[item]} />
+    const renderSection = ({ item, index }) => (
+        <NotificationSection onPress={() => { handleNotificationPress(groupedNotifications[item]) }} date={item} notifications={groupedNotifications[item]} index={index} />
     );
 
     // const renderItem = ({ item, index }) => (

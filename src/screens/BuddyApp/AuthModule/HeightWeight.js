@@ -158,6 +158,12 @@ const HeightWeight = ({ navigation }) => {
 
   const handleHeightWeight = () => {
     const { height_ft, height_in, weight_kg, weight_lb, weight_unit } = inputValues
+
+    if (height_ft == 0 || height_in == 0 || (weight_kg == 0 && weight_lb == 0)) {
+      showAlert("Error", "error", "These fields are required!")
+      return;
+    }
+
     const weight = weight_kg ? weight_kg : weight_lb;
     const newPayload = { ...dataPayload, height_ft, height_in, weight, weight_unit };
     dispatch(setDataPayload(newPayload));

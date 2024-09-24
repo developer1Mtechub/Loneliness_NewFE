@@ -30,13 +30,13 @@ const GenderLookingFor = ({ navigation }) => {
     };
     useBackHandler(handleBackPress);
 
-    useEffect(() => {
-        if (dataPayload?.gender?.length) {
-            const preSelectedGender = gender.filter(gender => dataPayload.gender.includes(gender));
-            setSelectedGender(preSelectedGender);
-        }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-    }, [dataPayload]);
+    // useEffect(() => {
+    //     if (dataPayload?.looking_for_gender) {
+    //         const preSelectedGender = gender.filter(gender => dataPayload.looking_for_gender.includes(gender));
+    //         setSelectedGender(preSelectedGender);
+    //     }
+    //     // eslint-disable-next-line react-hooks/exhaustive-deps
+    // }, [dataPayload]);
 
     const handleItemSelected = (item) => {
         setSelectedGender(item);

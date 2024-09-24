@@ -9,18 +9,19 @@ import { notiImg, notiImg2, notiImg3, notiImg4 } from '../assets/images';
 import moment from 'moment';
 import { ArrowForward } from '../assets/svgs';
 
-const NotificationItem = ({ item, onPress }) => {
+const NotificationItem = ({ item, onPress, index }) => {
     const images = [notiImg, notiImg2, notiImg3, notiImg4];
-    const randomImage = images[Math.floor(Math.random() * images.length)];
+    // const randomImage = images[Math.floor(Math.random() * images.length)];
+    const selectedImage = index < 3 ? images[index] : images[3];
     return (
         <TouchableOpacity
             onPress={onPress}
             style={styles.container}>
-            <Image source={randomImage} style={styles.image} />
+            <Image source={selectedImage} style={styles.image} />
             <View style={styles.notificationContent}>
                 <Text style={styles.title}>{item?.title}</Text>
                 <Text style={styles.description}>{item?.body}</Text>
-                <Text style={styles.time}>{moment(item?.created_at, "HH:mm:ss").format('hh:mm A')}</Text>
+                <Text style={styles.time}>{moment(item?.created_at).format('hh:mm A')}</Text>
             </View>
             <ArrowForward />
         </TouchableOpacity>

@@ -24,6 +24,7 @@ import { warningImg } from '../../../../assets/images';
 import { setRoute } from '../../../../redux/appSlice';
 import { SCREENS } from '../../../../constant/constants';
 import { resetNavigation } from '../../../../utils/resetNavigation';
+import { color } from '@rneui/base';
 
 const filterOptions = [
     { label: "Accepted Requests", value: "ACCEPTED" },
@@ -44,10 +45,13 @@ const UserServicesContent = ({ setCurrentIndex, initialIndex = 0, isFilter, setF
     const [selectedOption, setSelectedOption] = useState(null);
     const [relesePaymentModal, setReleasePaymentModal] = useState(false);
     const [releasePaymentDetail, setReleasePaymentDetail] = useState(null);
+    const [selectedItem, setSelectedItem] = useState(null);
     const [loader, setLoader] = useState(true);
     const navigation = useNavigation();
     const buttons = ['Upcoming', 'Requested', 'Completed'];
     const refRBSheet = useRef();
+    const isPaymentCancelled = (selectedItem?.canceled_status === "REQUESTED" || selectedItem?.canceled_status === "REJECTED") ? true : false
+    const modalTitle = isPaymentCancelled ? "The payment is cancelled for this service." : `Ready to release payment for this service?`;
 
 
     const handleSelectedChange = (button, index) => {
@@ -177,6 +181,7 @@ const UserServicesContent = ({ setCurrentIndex, initialIndex = 0, isFilter, setF
             navigation={navigation}
             index={selectedIndex}
             upComingPaymentPress={() => {
+                setSelectedItem(item)
                 handleRelaseOpenModal(item)
             }}
         />
@@ -282,14 +287,23 @@ const UserServicesContent = ({ setCurrentIndex, initialIndex = 0, isFilter, setF
             imageSource={warningImg}
             isParallelButton={true}
             loading={paymentLoading}
-            text={`Ready to release payment for this service?`}
-            parallelButtonText1={"Cancel Payment"}
+            text={modalTitle}
+            parallelButtonText1={
+                isPaymentCancelled
+                    ? "Cancelled Payment" :
+                    "Cancel Payment"
+            }
+            buttonStyle={{
+                borderColor: isPaymentCancelled ? theme.dark.disableButton : theme.dark.secondary
+            }}
+            buttonTextStyle={{ color: isPaymentCancelled ? theme.dark.disableButton : theme.dark.secondary, fontSize: isPaymentCancelled ? 11 : 12 }}
+            secondaryButtonStyle={{ backgroundColor: isPaymentCancelled ? theme.dark.disableButton : theme.dark.secondary }}
             parallelButtonText2={"Release"}
             parallelButtonPress1={() => {
-                handleCancelPayment(releasePaymentDetail);
+                !isPaymentCancelled && handleCancelPayment(releasePaymentDetail);
             }}
             parallelButtonPress2={() => {
-                handleReleasePayment(releasePaymentDetail);
+                !isPaymentCancelled && handleReleasePayment(releasePaymentDetail);
             }}
         />
     }

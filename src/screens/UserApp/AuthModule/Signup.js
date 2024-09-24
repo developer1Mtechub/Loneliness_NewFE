@@ -332,7 +332,7 @@ const Signup = ({ navigation }) => {
                     <Button
                         loading={loading}
                         onPress={() => {
-                            handleSignup();
+                            !loading && handleSignup();
                         }}
                         title={'Sign Up'}
                         customStyle={{ marginTop: 0 }}

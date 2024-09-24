@@ -86,7 +86,6 @@ const EnableLocation = ({ navigation }) => {
                 //console.log(JSON.stringify(formData))
                 //dispatch(setDataPayload(newPayload));
                 dispatch(updateProfile(formData)).then((result) => {
-                    //console.log('result data', result?.payload)
                     if (result?.payload?.status === "success") {
                         //showHideModal();
                         dispatch(setWarningContent(true))

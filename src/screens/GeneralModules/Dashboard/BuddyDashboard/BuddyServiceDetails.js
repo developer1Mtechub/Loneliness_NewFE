@@ -320,7 +320,7 @@ const BuddyServiceDetails = ({ navigation }) => {
                     onChangeText={setValue}
                     cellCount={CELL_COUNT}
                     rootStyle={styles.codeFieldRoot}
-                    keyboardType="default"
+                    keyboardType="numeric"
                     textContentType="oneTimeCode"
                     renderCell={({ index, symbol, isFocused }) => (
                         <Text

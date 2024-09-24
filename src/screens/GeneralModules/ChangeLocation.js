@@ -152,7 +152,7 @@ const MapScreen = ({ navigation }) => {
                 onPress={handleSelectLocation}
             >
                 {selectedLocation.latitude !== 0 && selectedLocation.longitude !== 0 && (
-                    <Marker coordinate={selectedLocation} >
+                    <Marker tracksViewChanges={false} coordinate={selectedLocation} >
                         <MapMarker />
                     </Marker>
                 )}

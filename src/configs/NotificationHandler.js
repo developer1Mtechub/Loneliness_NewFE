@@ -14,6 +14,7 @@ export const foregroundNotificationListener = () => {
         console.log('A new FCM message arrived!', remoteMessage);
 
         PushNotification.localNotification({
+            id: generateUniqueId(),
             // channelId: "testing-channal-id",
             title: remoteMessage.notification.title,
             message: remoteMessage.notification.body,

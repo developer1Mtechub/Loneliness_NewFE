@@ -147,7 +147,9 @@ const MainApp = () => {
         remoteMessage.notification,
       );
       dispatch(setNewNotification(true))
-      if (remoteMessage?.notification?.data?.type === "SERVICES" || remoteMessage?.notification?.data?.type === "PAYMENT" || remoteMessage?.notification?.data?.type === "Service Completed") {
+      if (remoteMessage?.notification?.data?.type === "SERVICES"
+        || remoteMessage?.notification?.data?.type === "PAYMENT" ||
+        remoteMessage?.notification?.data?.type === "Service Completed") {
         const routePayload = {
           request_id: remoteMessage?.notification?.data?.request_id,
           route: SCREENS.MAIN_DASHBOARD
@@ -181,7 +183,10 @@ const MainApp = () => {
 
   return (
     <View style={styles.container}>
-      <StatusBar backgroundColor={theme.dark.background} />
+      <StatusBar
+        backgroundColor={theme.dark.background}
+        barStyle="light-content"
+      />
       <Root />
       <DynamicAlert />
       {renderWarningModal()}

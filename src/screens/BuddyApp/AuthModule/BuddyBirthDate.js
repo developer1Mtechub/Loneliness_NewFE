@@ -44,6 +44,15 @@ const BuddyBirthDate = ({ navigation }) => {
     const handlebirthDate = () => {
         const { date } = form;
 
+        // Format the date for comparison
+        const formattedDate = moment(date).format('YYYY-MM-DD');
+        const today = moment().format('YYYY-MM-DD');
+
+        if (formattedDate === today) {
+            setErrors({ ...errors, birthDate: 'You must be at least 18 years old.' });
+            return;
+        }
+
         validateDateOfBirth(moment(date).format('YYYY-MM-DD'))
 
         if (errors?.birthDate) {

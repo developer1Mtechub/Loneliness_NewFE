@@ -48,6 +48,14 @@ const BirthDate = ({ navigation }) => {
         const { date } = form;
         let valid = true;
 
+        const formattedDate = moment(date).format('YYYY-MM-DD');
+        const today = moment().format('YYYY-MM-DD');
+
+        if (formattedDate === today) {
+            setErrors({ ...errors, birthDate: 'You must be at least 18 years old.' });
+            return;
+        }
+
         validateDateOfBirth(moment(date).format('YYYY-MM-DD'))
 
         if (errors?.birthDate !== '') {
