@@ -72,6 +72,9 @@ import successSubscriptionReducer from './PaymentSlices/successSubscriptionSlice
 import checkSubscriptionExistReducer from './PaymentSlices/checkSubscriptionExistSlice';
 import executePaymentRequestReducer from './PaymentSlices/executePaymentRequestSlice';
 import newNotificationReducer from './newNotificationSlice';
+import walletPayoutCheckReducer from './PaymentSlices/walletPayoutCheckSlice';
+import getUserLikeDislikeReducer from './UserDashboard/getUserLikeDislikeSlice';
+import cancelServiceSlice from './cancelServiceSlice'
 
 const persistConfig = {
     key: 'root',
@@ -149,7 +152,10 @@ const rootReducer = combineReducers({
     createSubscription: createSubscriptionReducer,
     successSubscription: successSubscriptionReducer,
     checkSubscriptionExist: checkSubscriptionExistReducer,
-    executeRequestPayment: executePaymentRequestReducer
+    executeRequestPayment: executePaymentRequestReducer,
+    walletPayoutCheck: walletPayoutCheckReducer,
+    getUserLikeDislike: getUserLikeDislikeReducer,
+    cancelService: cancelServiceSlice
 
 });
 

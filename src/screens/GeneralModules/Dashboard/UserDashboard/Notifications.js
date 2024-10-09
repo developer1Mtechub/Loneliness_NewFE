@@ -16,6 +16,7 @@ import moment from 'moment';
 import fonts from '../../../../styles/fonts';
 import HorizontalDivider from '../../../../components/HorizontalDivider';
 import { setRoute } from '../../../../redux/appSlice';
+import { resetState } from '../../../../redux/BuddyDashboard/userLikesDetailSlice';
 
 const NotificationSection = ({ date, notifications, onPress, index }) => {
     return (
@@ -98,6 +99,17 @@ const Notification = ({ navigation }) => {
     const groupedNotifications = groupNotificationsByDate(notifications);
 
     const handleNotificationPress = (item) => {
+        if (item[0]?.type === "CHAT") {
+            dispatch(resetState());
+            dispatch(setRoute({
+                route: SCREENS.MAIN_DASHBOARD,
+                receiver_id: item[0]?.sender_id,
+                isNoti: true
+            }));
+            resetNavigation(navigation, SCREENS.GENERAL_CHAT);
+
+            return
+        }
         const routePayload = {
             request_id: item[0].request_id,
             route: SCREENS.MAIN_DASHBOARD,

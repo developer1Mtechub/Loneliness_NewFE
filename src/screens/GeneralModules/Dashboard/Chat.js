@@ -372,7 +372,7 @@ const Chat = ({ navigation }) => {
                         </Animatable.View>
                     ) : (
                         <>
-                            <Image style={styles.homeLogo} source={homeLogo} />
+                            <Image style={styles.homeLogo} source={homeLogo} resizeMode='contain' />
                             <Text style={styles.headerText}>Chat</Text>
                             <TouchableOpacity onPress={() => setIsSearching(true)}>
                                 <Image style={styles.searchServices} source={searchServices} />

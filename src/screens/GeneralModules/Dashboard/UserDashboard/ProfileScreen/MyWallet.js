@@ -21,13 +21,14 @@ import CustomTextInput from '../../../../../components/TextInputComponent';
 import { withdrawAmount } from '../../../../../redux/PaymentSlices/withdrawAmountSlice';
 import { useAlert } from '../../../../../providers/AlertContext';
 import ButtonGroup from '../../../../../components/ButtonGroup';
+import { walletPayoutCheck } from '../../../../../redux/PaymentSlices/walletPayoutCheckSlice';
 
 const MyWallet = ({ navigation }) => {
     const dispatch = useDispatch();
     const { showAlert } = useAlert();
     const { transactions, loading, currentPage, totalPages, walletAmount } = useSelector((state) => state.getTransactionHistory);
     const { loading: amountLoading } = useSelector((state) => state.withdrawAmount)
-    const { role } = useSelector((state) => state.auth)
+    const { role, userLoginInfo } = useSelector((state) => state.auth)
     const [selectedIndex, setSelectedIndex] = useState(0);
     const buttons = ['Transaction History', 'Refund History'];
     const [page, setPage] = useState(1);
@@ -37,6 +38,7 @@ const MyWallet = ({ navigation }) => {
     const [amount, setAmount] = useState('');
     const [amountError, setAmountError] = useState('');
     const refRBSheet = useRef();
+    const { id } = userLoginInfo?.user
 
 
     const handleBackPress = () => {
@@ -99,6 +101,33 @@ const MyWallet = ({ navigation }) => {
         refRBSheet.current.close()
     };
 
+    const handleWalletPayCheckout = (batchId) => {
+
+        const payload = {
+            amount: amount,
+            user_id: id,
+            user_type: "buddy",
+            payoutBatchId: batchId
+        }
+
+        dispatch(walletPayoutCheck(payload)).then((result) => {
+
+            console.log(result?.payload)
+
+            if (result?.payload?.error === false) {
+                showAlert("Success", "success", "Withdraw amount successfully.");
+                setTimeout(() => {
+                    handleBackPress();
+                }, 3000);
+
+            } else {
+                showAlert("Error", "error", "Something went wrong! Try again latter.")
+            }
+
+        })
+
+    }
+
     const handleWithdrawPayment = () => {
 
         if (amount === '') {
@@ -107,16 +136,21 @@ const MyWallet = ({ navigation }) => {
         }
 
         const payload = {
-            amount: amount
+            amount: amount,
+            user_id: id,
+            user_type: "buddy",//buddy,user
+            email: "sb-tkylp32173822@personal.example.com"
         }
+
         dispatch(withdrawAmount(payload)).then((result) => {
 
-            if (result?.payload?.status === "success") {
+            if (result?.payload?.PaypalWithdrawObject?.payout_batch_id) {
                 handleSheetClose();
-                showAlert("Success", "success", result?.payload?.message);
-                setTimeout(() => {
-                    handleBackPress();
-                }, 3000);
+                handleWalletPayCheckout(result?.payload?.PaypalWithdrawObject?.payout_batch_id)
+                // showAlert("Success", "success", result?.payload?.message);
+                // setTimeout(() => {
+                //     handleBackPress();
+                // }, 3000);
 
             } else if (result?.payload?.status === "error") {
                 showAlert("Error", "error", result?.payload?.message)

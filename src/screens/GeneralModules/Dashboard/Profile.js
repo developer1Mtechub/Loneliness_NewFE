@@ -31,6 +31,7 @@ import { clearState } from '../../../redux/AuthModule/signupSlice';
 
 const userList = [
     { id: '1', icon: WalletIcon, text: 'My Wallet', route: SCREENS.MY_WALLET, isRoute: false },
+    { id: '2', icon: HeartIcon, text: 'My Likes', route: SCREENS.MY_LIKES_DISLIKES, isRoute: false },
     { id: '2', icon: PremiumIcon, text: 'Go Premium', route: SCREENS.PREMIUM, isRoute: true },
     { id: '3', icon: ProfileIcon, text: 'Update Profile', route: SCREENS.UPDATE_USER_PROFILE, isRoute: true },
     { id: '4', icon: PasswordIcon, text: 'Change Password', route: SCREENS.CHANGE_PASSWORD, isRoute: false },

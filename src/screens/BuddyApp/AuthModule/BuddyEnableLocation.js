@@ -10,7 +10,7 @@ import { scaleHeight, scaleWidth } from '../../../styles/responsive';
 import HorizontalDivider from '../../../components/HorizontalDivider';
 import Button from '../../../components/ButtonComponent';
 import ProfileProgressBar from '../../../components/ProfileProgressBar';
-import { alertLogo, mapImg, successText } from '../../../assets/images';
+import { accountCreated, alertLogo, mapImg, successText } from '../../../assets/images';
 import Modal from "react-native-modal";
 import Spinner from '../../../components/Spinner';
 import { login } from '../../../redux/AuthModule/signInSlice';
@@ -170,7 +170,7 @@ const BuddyEnableLocation = ({ navigation }) => {
 
                 <Image
                     resizeMode='contain'
-                    source={successText}
+                    source={accountCreated}
                     style={{
                         width: scaleWidth(130),
                         height: scaleHeight(45),

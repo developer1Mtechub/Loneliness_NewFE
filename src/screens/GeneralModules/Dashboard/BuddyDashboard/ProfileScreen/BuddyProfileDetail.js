@@ -43,7 +43,11 @@ const BuddyProfileDetail = ({ navigation }) => {
     const handleBackPress = () => {
         if (currentRoute.route === SCREENS.GENERAL_CHAT) {
             resetNavigation(navigation, SCREENS.GENERAL_CHAT)
-        } else {
+        }
+        else if (currentRoute.route === SCREENS.MY_LIKES_DISLIKES) {
+            resetNavigation(navigation, SCREENS.MY_LIKES_DISLIKES)
+        }
+        else {
             resetNavigation(navigation, SCREENS.MAIN_DASHBOARD, { screen: SCREENS.PROFILE })
         }
 
@@ -52,7 +56,7 @@ const BuddyProfileDetail = ({ navigation }) => {
     useBackHandler(handleBackPress);
 
     useEffect(() => {
-        dispatch(getUserDetail(currentRoute?.chat_id || user_id))
+        dispatch(getUserDetail(currentRoute?.chat_id || currentRoute?.user_id || user_id))
     }, [dispatch, user_id, currentRoute])
 
 
@@ -75,24 +79,6 @@ const BuddyProfileDetail = ({ navigation }) => {
     }, [userDetail])
 
 
-    // const reverseGeocode = async (latitude, longitude) => {
-    //     try {
-    //         const response = await fetch(
-    //             `https://maps.googleapis.com/maps/api/geocode/json?latlng=${latitude},${longitude}&key=${MAP_API_KEY}`
-    //         );
-    //         const data = await response.json();
-    //         if (data.results.length > 0) {
-    //             return data.results[0].formatted_address;
-    //         } else {
-    //             return null;
-    //         }
-    //     } catch (error) {
-    //         console.error(error);
-    //         return null;
-    //     }
-    // };
-
-
     const userLocation = userDetail?.location?.country && userDetail?.location?.city
         ? `${userDetail.location.country}, ${userDetail.location.city}`
         : null;
@@ -107,7 +93,7 @@ const BuddyProfileDetail = ({ navigation }) => {
                 uri: item
             }}
                 style={styles.carouselImage}
-                />
+            />
         </View>
     );
 
@@ -130,8 +116,8 @@ const BuddyProfileDetail = ({ navigation }) => {
                 onPress={() => {
                     handleBackPress();
                 }}
-                title={currentRoute?.chat_id ? "Buddy Detail" : "Profile Details"}
-                icon={currentRoute?.chat_id ? null : "edit"}
+                title={currentRoute?.chat_id || currentRoute?.user_id ? "Buddy Detail" : "Profile Details"}
+                icon={currentRoute?.chat_id || currentRoute?.user_id ? null : "edit"}
                 iconPress={() => {
                     handleUpdateProfile();
                 }}

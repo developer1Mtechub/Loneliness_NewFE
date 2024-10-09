@@ -65,5 +65,6 @@ export const SCREENS = {
     POLICY_TERMS: "PolicyAndTerms",
     DELETE_ACCOUNT: "DeleteAccount",
     UPDATE_RATE: "UpdateRate",
-    PAYPAL_WEBVIEW: "PayPalWebview"
+    PAYPAL_WEBVIEW: "PayPalWebview",
+    MY_LIKES_DISLIKES: "MyLikesDislikes"
 };

@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import { View, Text, Image, StyleSheet, TouchableOpacity, SafeAreaView, Keyboard } from 'react-native';
 import { Icon } from 'react-native-elements';
-import { alertLogo, locationPin } from '../../../../assets/images';
+import { alertLogo, error_alert_img, locationPin, warningImg } from '../../../../assets/images';
 import { theme } from '../../../../assets';
 import DetailItem from '../../../../components/DetailItem';
 import Button from '../../../../components/ButtonComponent';
@@ -36,12 +36,16 @@ import {
 } from "react-native-confirmation-code-field";
 import { verifyMeetingCode } from '../../../../redux/BuddyDashboard/verifyMeetingCodeSlice';
 import WarningBanner from '../../../../components/WarningBanner';
+import { color } from '@rneui/base';
+import { cancelService } from '../../../../redux/cancelServiceSlice';
+import CustomModal from '../../../../components/CustomModal';
 const CELL_COUNT = 6
 const BuddyServiceDetails = ({ navigation }) => {
     const dispatch = useDispatch();
     const { currentRoute } = useSelector((state) => state.app)
     const { userDetail, loading } = useSelector((state) => state.getUserDetailByService)
     const { ratingDetail, loading: ratingLoader, error } = useSelector((state) => state.getServiceRating)
+    const { loading: cancelServiceLoader } = useSelector((state) => state.cancelService)
     const { loading: acceptPaymentLoader } = useSelector((state) => state.actionCancelPayment)
     const { loading: requestPaymentLoader } = useSelector((state) => state.requestForPayment)
     const { loading: verifyCodeLoader } = useSelector((state) => state.verifyMeetingCode)
@@ -52,6 +56,8 @@ const BuddyServiceDetails = ({ navigation }) => {
     const [modalVisible, setModalVisible] = useState(false);
     const [keyboardStatus, setKeyboardStatus] = useState(false);
     const [value, setValue] = useState('');
+    const [serviceCancelModal, setServiceCancelModal] = useState(false);
+    const [serviceErrorMessage, setServiceErrorMessage] = useState('')
     const ref = useBlurOnFulfill({ value, cellCount: CELL_COUNT });
     const [props, getCellOnLayoutHandler] = useClearByFocusCell({
         value,
@@ -164,6 +170,10 @@ const BuddyServiceDetails = ({ navigation }) => {
         }
     }
 
+    const handleCloseServiceModal = () => {
+        setServiceCancelModal(false);
+    };
+
 
     const handleCancelPayment = () => {
 
@@ -240,6 +250,31 @@ const BuddyServiceDetails = ({ navigation }) => {
                 showAlert("Error", "error", result?.payload?.message)
             }
         })
+    }
+
+    const handleCancelService = () => {
+
+        const payload = {
+            request_id: userDetail?.id,
+            current_date: moment().format('YYYY-MM-DD'),
+            current_time: moment().format('HH:mm:ss'),
+            cancel_by: "buddy" // buddy or user
+        };
+
+        dispatch(cancelService(payload)).then((result) => {
+            if (result?.payload?.status === "success") {
+                showAlert("Success", "success", result?.payload?.message)
+                setTimeout(() => {
+                    handleBackPress();
+                }, 3000);
+
+            } else if (result?.payload?.error) {
+                setServiceErrorMessage(result?.payload?.message)
+                setServiceCancelModal(true);
+                // show modal here....
+            }
+        })
+
     }
 
     const renderLoader = () => {
@@ -607,33 +642,51 @@ const BuddyServiceDetails = ({ navigation }) => {
 
                         <View style={styles.buttonSection}>
                             {
-                                (userDetail?.status === "ACCEPTED" || userDetail?.buddy_request_back?.buddy_status === "ACCEPTED") && !userDetail?.meeting_code_verified && <Button
-                                    onPress={() => {
-                                        setModalVisible(true)
-                                    }}
-                                    title={"Enter Code"}
-                                    customStyle={{
-                                        width: '95%',
-                                        top: scaleHeight(30)
-                                    }}
-                                    textCustomStyle={{}}
-                                />
+                                (userDetail?.status === "ACCEPTED" || userDetail?.buddy_request_back?.buddy_status === "ACCEPTED") &&
+                                !userDetail?.meeting_code_verified && <View style={{ flexDirection: 'row' }}>
+                                    <Button
+                                        onPress={() => {
+                                            setModalVisible(true)
+                                        }}
+                                        title={"Enter Code"}
+                                        customStyle={{
+                                            width: '50%',
+                                            top: scaleHeight(30),
+                                            marginRight: '2%'
+                                        }}
+                                        textCustomStyle={{}}
+                                    />
+                                    <Button
+                                        loading={cancelServiceLoader}
+                                        onPress={() => {
+                                            handleCancelService()
+                                        }}
+                                        title={"Cancel Service"}
+                                        customStyle={{
+                                            width: '50%',
+                                            top: scaleHeight(30),
+                                            backgroundColor: theme.dark.error
+                                        }}
+                                        textCustomStyle={{ color: theme.dark.white }}
+                                    />
+                                </View>
                             }
 
 
                             {/* {userDetail?.status === "PAID" && userDetail?.canceled_status == null && <Button */}
-                            {(userDetail?.status === "ACCEPTED" || userDetail?.buddy_request_back?.buddy_status === "ACCEPTED") && userDetail?.canceled_status == null && userDetail?.meeting_code_verified && <Button
-                                disabled={isPaymentRequested}
-                                onPress={handleRequestForPayment}
-                                title={buttonTitle}
-                                loading={requestPaymentLoader}
-                                customStyle={{
-                                    width: '95%',
-                                    top: scaleHeight(30),
-                                    backgroundColor: buttonBackgroundColor
-                                }}
-                                textCustomStyle={{}}
-                            />
+                            {(userDetail?.status === "ACCEPTED" || userDetail?.buddy_request_back?.buddy_status === "ACCEPTED")
+                                && userDetail?.canceled_status == null && userDetail?.meeting_code_verified && <Button
+                                    disabled={isPaymentRequested}
+                                    onPress={handleRequestForPayment}
+                                    title={buttonTitle}
+                                    loading={requestPaymentLoader}
+                                    customStyle={{
+                                        width: '95%',
+                                        top: scaleHeight(30),
+                                        backgroundColor: buttonBackgroundColor
+                                    }}
+                                    textCustomStyle={{}}
+                                />
 
                                 // <Button
                                 //     disabled={userDetail?.release_payment_requests === "REQUESTED" ? true : false}
@@ -777,6 +830,19 @@ const BuddyServiceDetails = ({ navigation }) => {
                     </View>
                 </ScrollView>}
             {showModalView()}
+            <CustomModal
+                isVisible={serviceCancelModal}
+                onClose={handleCloseServiceModal}
+                headerTitle={"Cancel Service"}
+                imageSource={warningImg}
+                text={serviceErrorMessage}
+                buttonText="Ok"
+                isParallelButton={false}
+                isCross={false}
+                buttonAction={() => {
+                    handleCloseServiceModal();
+                }}
+            />
         </SafeAreaView>
     );
 };

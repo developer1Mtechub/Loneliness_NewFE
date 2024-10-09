@@ -23,6 +23,7 @@ import { SCREENS } from './src/constant/constants';
 import { resetNavigation } from './src/utils/resetNavigation';
 import { setRoute } from './src/redux/appSlice';
 import { setNewNotification } from './src/redux/newNotificationSlice';
+import { resetState } from './src/redux/BuddyDashboard/userLikesDetailSlice';
 
 const MainApp = () => {
   const dispatch = useDispatch();
@@ -55,6 +56,17 @@ const MainApp = () => {
             });
           }
 
+        } else if (notification?.data?.type === "CHAT") {
+          dispatch(resetState());
+          dispatch(setRoute({
+            route: SCREENS.MAIN_DASHBOARD,
+            receiver_id: notification?.data?.sender_id,
+            isNoti: true
+          }));
+          navigationRef.reset({
+            index: 0,
+            routes: [{ name: SCREENS.GENERAL_CHAT }],
+          });
         }
       }
 
@@ -167,6 +179,17 @@ const MainApp = () => {
           });
         }
 
+      } else if (remoteMessage?.notification?.data?.type === "CHAT") {
+        dispatch(resetState());
+        dispatch(setRoute({
+          route: SCREENS.MAIN_DASHBOARD,
+          receiver_id: remoteMessage?.notification?.data?.sender_id,
+          isNoti: true
+        }));
+        navigationRef.reset({
+          index: 0,
+          routes: [{ name: SCREENS.GENERAL_CHAT }],
+        });
       }
       // handleNotificationTap(remoteMessage.notification);
       //handle notification click

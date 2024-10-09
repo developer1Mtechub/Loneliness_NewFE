@@ -28,11 +28,13 @@ import { userBuddyAction } from '../../redux/userBuddyActionSlice';
 import { setRoute } from '../../redux/appSlice';
 import FullScreenLoader from '../../components/FullScreenLoader';
 import { clearResponse, uploadChatImage } from '../../redux/uploadChatImageSlice';
+import { getUserDetail, resetState } from '../../redux/BuddyDashboard/userLikesDetailSlice';
 
 export default function GeneralChat({ navigation }) {
     const dispatch = useDispatch();
     const [socket, setSocket] = useState(null);
     const { userLoginInfo, role } = useSelector((state) => state.auth)
+    const { userDetail, loading } = useSelector((state) => state.getUserDetail)
     const { currentRoute } = useSelector((state) => state.app)
     const { response } = useSelector((state) => state.uploadChatImage)
     const user_id = userLoginInfo?.user?.id
@@ -68,7 +70,9 @@ export default function GeneralChat({ navigation }) {
     };
 
     const handleBackPress = () => {
-        //updateLastMessage();
+        if (currentRoute?.isNoti) {
+            dispatch(resetState());
+        }
         resetNavigation(navigation, SCREENS.MAIN_DASHBOARD, { screen: SCREENS.CHAT })
         return true;
     };
@@ -81,6 +85,10 @@ export default function GeneralChat({ navigation }) {
         newSocket.on('connect', () => {
             console.log('Socket connected--->chat screen');
         });
+
+        if (currentRoute?.isNoti) {
+            dispatch(getUserDetail(currentRoute?.receiver_id));
+        }
 
         if (newSocket) {
 
@@ -131,7 +139,7 @@ export default function GeneralChat({ navigation }) {
                 socket.emit("userChatCountget", userId);
             });
             socket.on("receiveMessage", (message) => {
-                 console.log('receiveMessage', message)
+                console.log('receiveMessage', message)
                 const transformedMessage = {
                     _id: Math.round(Math.random() * 1000000),
                     text: message.message,
@@ -517,8 +525,8 @@ export default function GeneralChat({ navigation }) {
             <View style={{ marginHorizontal: 10 }}>
 
                 <ChatHeader
-                    userName={currentRoute?.user_name}
-                    image_url={currentRoute?.image_url}
+                    userName={currentRoute?.user_name || userDetail?.full_name}
+                    image_url={currentRoute?.image_url || userDetail?.image_urls[0]}
                     status={currentRoute?.status}
                     backPress={handleBackPress}
                     onPress={() => {

@@ -30,8 +30,6 @@ const UserLikesDetail = ({ navigation }) => {
     const { currentRoute } = useSelector((state) => state.app)
     const [modalVisible, setModalVisible] = useState(false);
 
-    console.log(currentRoute)
-
     const handleBackPress = () => {
         resetNavigation(navigation, currentRoute.route)
         return true;

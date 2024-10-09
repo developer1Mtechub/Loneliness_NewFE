@@ -16,7 +16,7 @@ export const foregroundNotificationListener = () => {
         PushNotification.localNotification({
             id: generateUniqueId(),
             // channelId: "testing-channal-id",
-            title: remoteMessage.notification.title,
+            title: remoteMessage.data?.type === "CHAT" ? remoteMessage.data?.sender_name : remoteMessage.notification?.title,
             message: remoteMessage.notification.body,
         });
     });
@@ -32,7 +32,7 @@ export const backgroundMessageHandler = () => {
         PushNotification.localNotification({
             id: generateUniqueId(),
             // channelId: "testing-channal-id", // (required for Android)
-            title: remoteMessage.notification?.title,
+            title: remoteMessage.data?.type === "CHAT" ? remoteMessage.data?.sender_name : remoteMessage.notification?.title,
             message: remoteMessage.notification?.body,
             // You can add other options here as per your needs
         });

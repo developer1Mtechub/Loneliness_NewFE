@@ -25,15 +25,15 @@ PushNotification.configure({
 
 PushNotification.createChannel(
     {
-      channelId: generateUniqueId(), // Ensure this matches the ID used in localNotification
-      channelName: generateUniqueId(), // Descriptive name for the channel
-      channelDescription: "A channel for testing notifications", // Description
-      soundName: "default", // Sound for notifications
-      importance: 4, // High importance
-      vibrate: true, // Vibration
+        channelId: generateUniqueId(), // Ensure this matches the ID used in localNotification
+        channelName: generateUniqueId(), // Descriptive name for the channel
+        channelDescription: "A channel for testing notifications", // Description
+        soundName: "default", // Sound for notifications
+        importance: 4, // High importance
+        vibrate: true, // Vibration
     },
     (created) => console.log(`createChannel returned '${created}'`)
-  );
+);
 
 // Register background handler
 messaging().setBackgroundMessageHandler(async remoteMessage => {
@@ -42,7 +42,7 @@ messaging().setBackgroundMessageHandler(async remoteMessage => {
     PushNotification.localNotification({
         id: generateUniqueId(),
         // channelId: "testing-channal-id", // (required for Android)
-        title: remoteMessage.notification?.title,
+        title: remoteMessage.data?.type === "CHAT" ? remoteMessage.data?.sender_name : remoteMessage.notification?.title,
         message: remoteMessage.notification?.body,
         // You can add other options here as per your needs
     });

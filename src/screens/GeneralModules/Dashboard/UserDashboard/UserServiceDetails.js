@@ -36,6 +36,7 @@ import { createCustomer } from '../../../../redux/PaymentSlices/createCustomerSl
 import CrossIcon from 'react-native-vector-icons/AntDesign'
 import { calculateAge } from '../../../../utils/calculateAge';
 import { cardWalletPaymentTransfer } from '../../../../redux/UserDashboard/cardWalletPaymentTransferSlice';
+import { cancelService } from '../../../../redux/cancelServiceSlice';
 
 const { width: screenWidth, height: screenHeight } = Dimensions.get('window');
 const UserServiceDetails = ({ navigation }) => {
@@ -45,6 +46,7 @@ const UserServiceDetails = ({ navigation }) => {
     const { buddyDetail, loading } = useSelector((state) => state.getBuddyDetailById)
     const { loading: paymentLoading } = useSelector((state) => state.releasePayment);
     const { loading: paymentTransferLoader } = useSelector((state) => state.cardWalletPaymentTransfer);
+    const { loading: cancelServiceLoader } = useSelector((state) => state.cancelService)
     const { currentRoute } = useSelector((state) => state.app)
     const { showAlert } = useAlert()
     const [activeIndex, setActiveIndex] = useState(0);
@@ -58,6 +60,8 @@ const UserServiceDetails = ({ navigation }) => {
     const [isOverlayOpened, setOverlayOpened] = useState(false);
     const [paymentLoader, setPaymentLoader] = useState(false);
     const [requestStatus, setRequestStatus] = useState('');
+    const [serviceCancelModal, setServiceCancelModal] = useState(false);
+    const [serviceErrorMessage, setServiceErrorMessage] = useState('')
     const categories = buddyDetail?.category;
     const { customer_id } = userLoginInfo?.user
 
@@ -187,6 +191,10 @@ const UserServiceDetails = ({ navigation }) => {
 
     const handleServicePayCloseModal = () => {
         setServicePayModal(false);
+    };
+
+    const handleCloseServiceModal = () => {
+        setServiceCancelModal(false);
     };
 
 
@@ -483,6 +491,33 @@ const UserServiceDetails = ({ navigation }) => {
         } catch (error) {
             console.error('Error creating payment method:', error);
         }
+    }
+
+    const handleCancelService = () => {
+
+        const payload = {
+            request_id: buddyDetail?.id,
+            current_date: moment().format('YYYY-MM-DD'),
+            current_time: moment().format('HH:mm:ss'),
+            cancel_by: "user" // buddy or user
+        };
+
+        console.log(payload)
+
+        dispatch(cancelService(payload)).then((result) => {
+            if (result?.payload?.status === "success") {
+                showAlert("Success", "success", result?.payload?.message)
+                setTimeout(() => {
+                    handleBackPress();
+                }, 3000);
+
+            } else if (result?.payload?.error) {
+                setServiceErrorMessage(result?.payload?.message)
+                setServiceCancelModal(true);
+                // show modal here....
+            }
+        })
+
     }
 
 
@@ -1050,6 +1085,23 @@ const UserServiceDetails = ({ navigation }) => {
                 </View>
             )}
 
+            {(buddyDetail?.status == "ACCEPTED" ||
+                buddyDetail?.buddy_request_back?.buddy_status === "ACCEPTED") && !loading && <View>
+                    <Button
+                        loading={cancelServiceLoader}
+                        onPress={() => {
+                            handleCancelService()
+                        }}
+                        title={"Cancel Service"}
+                        customStyle={{
+                            width: '90%',
+
+                            backgroundColor: theme.dark.error
+                        }}
+                        textCustomStyle={{ color: theme.dark.white }}
+                    />
+                </View>}
+
 
             {isOverlayOpened && Overlay()}
             {renderSheet()}
@@ -1105,6 +1157,20 @@ const UserServiceDetails = ({ navigation }) => {
                 parallelButtonPress2={() => {
                     setOverlayOpened(true);
                     handleServicePayCloseModal();
+                }}
+            />
+
+            <CustomModal
+                isVisible={serviceCancelModal}
+                onClose={handleCloseServiceModal}
+                headerTitle={"Cancel Service"}
+                imageSource={warningImg}
+                text={serviceErrorMessage}
+                buttonText="Ok"
+                isParallelButton={false}
+                isCross={false}
+                buttonAction={() => {
+                    handleCloseServiceModal();
                 }}
             />
 

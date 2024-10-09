@@ -73,3 +73,4 @@ export { default as PolicyAndTerms } from './screens/GeneralModules/PolicyAndTer
 export { default as DeleteAccount } from './screens/GeneralModules/DeleteAccount'
 export { default as UpdateRate } from './screens/GeneralModules/Dashboard/BuddyDashboard/ProfileScreen/UpdateRate'
 export { default as PayPalWebview } from './screens/GeneralModules/PayPalWebview'
+export { default as MyLikesDislikes } from './screens/GeneralModules/Dashboard/UserDashboard/ProfileScreen/MyLikesDislikes'

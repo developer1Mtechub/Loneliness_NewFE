@@ -21,6 +21,7 @@ import { executeRequestPayment } from '../../redux/PaymentSlices/executePaymentR
 const PayPalWebview = ({ navigation }) => {
     const dispatch = useDispatch();
     const { loading } = useSelector((state) => state.getPayPalUrl)
+    const { loading: paymentExecuteLoader } = useSelector((state) => state.executeRequestPayment)
     const { loading: chatPaymentLoader } = useSelector((state) => state.executeChatPayment)
     const { userLoginInfo } = useSelector((state) => state.auth)
     const { currentRoute } = useSelector((state) => state.app)
@@ -116,7 +117,7 @@ const PayPalWebview = ({ navigation }) => {
         setCanGoBack(newNavState.canGoBack);
         const { url } = newNavState;
         const result = parseResponseData(url);
-        console.log('url', url);
+        console.log('url---->', url);
         if (requestSent) {
             return; // Exit if request has already been sent
         }
@@ -137,6 +138,8 @@ const PayPalWebview = ({ navigation }) => {
                         paymentId: result?.query?.paymentId,
                         payerId: result?.query?.PayerID
                     }
+
+                    console.log('payload----->', payload)
 
                     setRequestSent(true); // Mark request as sent
                     dispatch(executeRequestPayment(payload)).then((result) => {
@@ -203,9 +206,9 @@ const PayPalWebview = ({ navigation }) => {
 
 
     const renderWebView = () => {
-        if ((loading || chatPaymentLoader)) {
+        if ((loading || chatPaymentLoader || paymentExecuteLoader)) {
             return <FullScreenLoader
-                loading={(loading || chatPaymentLoader)} />;
+                loading={(loading || chatPaymentLoader || paymentExecuteLoader)} />;
         }
 
         return (

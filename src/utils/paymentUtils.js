@@ -1,11 +1,12 @@
 // paymentUtils.js
 
 import { initPaymentSheet, presentPaymentSheet } from '@stripe/stripe-react-native';
+import { API_BASE_URL_PAYMENT } from '@env'
 
 const initializePaymentSheet = async (booking_price, email = 'user@gmail.com', currency = 'usd', merchantDisplayName = 'Test User') => {
     console.log('Booking price:', booking_price);
 
-    const response = await fetch(`https://lone-be.mtechub.com/create-payment`, {
+    const response = await fetch(`${API_BASE_URL_PAYMENT}/create-payment`, {
         method: 'POST',
         headers: {
             'Content-Type': 'application/json',
@@ -16,6 +17,8 @@ const initializePaymentSheet = async (booking_price, email = 'user@gmail.com', c
             amount: booking_price, // Amount in cents
         }),
     });
+
+    console.log('response', response)
 
     const { customer_id, ephemeral_key, payment_intent } = await response.json();
     console.log('Customer ID:', customer_id);

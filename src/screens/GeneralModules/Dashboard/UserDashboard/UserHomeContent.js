@@ -73,6 +73,8 @@ import { getAllCategories } from '../../../../redux/getAllCategoriesSlice';
 import { openPaymentSheet } from '../../../../utils/paymentUtils';
 import { getUserDetail } from '../../../../redux/BuddyDashboard/userLikesDetailSlice';
 import { reverseGeocode } from '../../../../utils/geoCodeUtils';
+import RBSheet from 'react-native-raw-bottom-sheet';
+import { API_BASE_URL_PAYMENT } from '@env'
 
 const { width: screenWidth, height: screenHeight } = Dimensions.get('window');
 
@@ -129,8 +131,10 @@ const UserHomeContent = ({ showFilterModal, setFilterModal, setFilter }) => {
     const [cardDetails, setCradDetails] = useState({});
     const [keyboardStatus, setKeyboardStatus] = useState(false);
     const [selectedValue, setSelectedValue] = useState('');
+    const [chatPaymentLoader, setChatPaymentLoader] = useState(false);
     const [socket, setSocket] = useState(null);
     const scrollViewRef = useRef(null);
+    const refRBSheet = useRef();
     const [placeName, setPlaceName] = useState('')
     const [form, setForm] = useState({
         category: '',
@@ -294,26 +298,16 @@ const UserHomeContent = ({ showFilterModal, setFilterModal, setFilter }) => {
                 translateX.setValue(0);
                 translateY.setValue(0);
                 setAction({ index: null, type: null });
-                // if (isfilterApplied) {
-                //     setUserCurrentIndex((prevIndex) => (prevIndex + 1) % filteredData?.data?.length);
-                // } else {
-                //     setUserCurrentIndex((prevIndex) => (prevIndex + 1) % response?.data?.length);
-                // }
-
 
                 if (isfilterApplied) {
-                    // setUserCurrentIndex((prevIndex) => (prevIndex + 1) % filteredData?.data?.length);
                     setUserCurrentIndex((prevIndex) => {
                         const newIndex = (prevIndex + 1) % (filteredData?.data?.length || 1);
-                        //setCurrentUser(filteredData?.data[newIndex]);
                         dispatch(setCurrentUserIndex(filteredData?.data[newIndex])); // Dispatch the action with the new index
                         return newIndex;
                     });
                 } else {
-                    // setUserCurrentIndex((prevIndex) => (prevIndex + 1) % response?.data?.length);
                     setUserCurrentIndex((prevIndex) => {
                         const newIndex = (prevIndex + 1) % (response?.data?.length || 1);
-                        //setCurrentUser(response?.data[newIndex]);
                         dispatch(setCurrentUserIndex(response?.data[newIndex])); // Dispatch the action with the new index
                         return newIndex;
                     });
@@ -1289,6 +1283,7 @@ const UserHomeContent = ({ showFilterModal, setFilterModal, setFilter }) => {
 
     const handleCreatePaymentMethod = async () => {
         //console.log('cardDetails', cardDetails)
+        setChatPaymentLoader(true)
         try {
             const { paymentMethod, error } = await createPaymentMethod({
                 type: 'card',
@@ -1299,18 +1294,23 @@ const UserHomeContent = ({ showFilterModal, setFilterModal, setFilter }) => {
             if (error) {
                 showAlert("Error", "error", error?.message)
                 console.error('Error creating payment method:', error);
+                setChatPaymentLoader(false)
             } else {
                 console.log('Created payment method:', paymentMethod?.id);
+                setChatPaymentLoader(false)
+                handleChatPaymentStripe(paymentMethod?.id)
+
                 //call create customer api here..
-                if (customer_id === null) {
-                    console.log("customer not created")
-                    handleCreateCustomer(paymentMethod?.id)
-                } else {
-                    console.log("customer already created")
-                    handleAttachPaymentMethod(paymentMethod?.id)
-                }
+                // if (customer_id === null) {
+                //     console.log("customer not created")
+                //     handleCreateCustomer(paymentMethod?.id)
+                // } else {
+                //     console.log("customer already created")
+                //     handleAttachPaymentMethod(paymentMethod?.id)
+                // }
             }
         } catch (error) {
+            setChatPaymentLoader(false)
             console.error('Error creating payment method:', error);
         }
     }
@@ -1334,7 +1334,7 @@ const UserHomeContent = ({ showFilterModal, setFilterModal, setFilter }) => {
                     style={{
                         backgroundColor: 'white',
                         width: '80%',
-                        height: keyboardStatus ? '40%' : '30%',
+                        height: keyboardStatus ? '45%' : '30%',
                         borderRadius: 16,
                         margin: 30
                     }}>
@@ -1376,7 +1376,7 @@ const UserHomeContent = ({ showFilterModal, setFilterModal, setFilter }) => {
                     />
 
                     <Button
-                        loading={paymentLoader}
+                        loading={chatPaymentLoader}
                         isBgTransparent={true}
                         onPress={() => {
                             handleCreatePaymentMethod();
@@ -1400,6 +1400,73 @@ const UserHomeContent = ({ showFilterModal, setFilterModal, setFilter }) => {
 
     const scrollUp = () => {
         scrollViewRef.current.scrollTo({ x: 500, animated: true });
+    };
+
+    const handleChatPaymentStripe = async (payment_method_id = "pm_1Q68hgGui44lwdb4jDU50UPO") => {
+        const response = await fetch(`${API_BASE_URL_PAYMENT}/create-payment-stripe-chat`, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({
+                amount_body: 1,
+                paymentMethodId: payment_method_id,
+                user_id: id,
+                buddy_id: currentUser?.id,
+                return_url: "http://localhost:3001/success"
+            }),
+        });
+
+        const result = await response.json();
+        setOverlayOpened(false)
+        if (!result?.error) {
+            showAlert("Success", "success", result?.message)
+        } else {
+            showAlert("Error", "error", result?.message)
+        }
+
+    }
+
+    const renderPaymentMethodSheet = () => {
+        return (
+            <RBSheet
+                ref={refRBSheet}
+                height={100}
+                openDuration={250}
+                customStyles={{
+                    wrapper: styles.wrapper,
+                    container: [
+                        styles.sheetContainer,
+                        { backgroundColor: theme.dark.background } // For dynamic theme-based styling
+                    ]
+                }}
+            >
+                <TouchableOpacity
+                    onPress={() => {
+                        refRBSheet.current.close()
+                        payPalWebviewNav();
+                    }}
+                    style={styles.paymentButton}
+                >
+                    <Text style={[styles.paymentText, { color: theme.dark.white }]}>
+                        Paypal
+                    </Text>
+                </TouchableOpacity>
+                <HorizontalDivider />
+                <TouchableOpacity
+                    onPress={() => {
+                        refRBSheet.current.close();
+                        setOverlayOpened(true)
+                        //openPaymentSheet(100, handleWalletPayment, 'user@gmail.com', 'usd', 'Test User');
+                    }}
+                    style={styles.paymentButton}
+                >
+                    <Text style={[styles.paymentText, { color: theme.dark.white }]}>
+                        Stripe
+                    </Text>
+                </TouchableOpacity>
+            </RBSheet>
+        );
     };
 
     return (
@@ -1635,7 +1702,6 @@ const UserHomeContent = ({ showFilterModal, setFilterModal, setFilter }) => {
                                 <DetailItem label="Hourly Rate" value={`$${currentUser?.hourly_rate}`} />
                                 <DetailItem label="Languages" value={`${currentUser?.languages !== null &&
                                     currentUser?.languages != undefined ? JSON.parse(currentUser?.languages) : ''}`} />
-                                {/* <DetailItem label="Location" value={`${currentUser?.location?.city && currentUser?.location?.city}, ${currentUser?.location?.city && currentUser?.location?.city}`} /> */}
 
                                 <View style={{
                                     flexDirection: 'row',
@@ -1810,11 +1876,13 @@ const UserHomeContent = ({ showFilterModal, setFilterModal, setFilter }) => {
                         parallelButtonText1={"Cancel"}
                         parallelButtonText2={"Pay Now!"}
                         parallelButtonPress1={() => {
+                            refRBSheet.current.close()
                             handleCloseModal2()
                         }}
                         parallelButtonPress2={() => {
                             handleCloseModal2()
-                            handleOpenModal3();
+                            refRBSheet.current.open()
+                            //handleOpenModal3();
                         }}
                     />
 
@@ -1831,7 +1899,8 @@ const UserHomeContent = ({ showFilterModal, setFilterModal, setFilter }) => {
                         parallelButtonText2={"PayPal"}
                         buttonText={'PayPal'}
                         buttonAction={() => {
-                            payPalWebviewNav();
+                            refRBSheet.current.open()
+                            //payPalWebviewNav();
                             //openPaymentSheet(100, handleWalletPayment, 'user@gmail.com', 'usd', 'Test User')
                             //setOverlayOpened(true);
                             handleCloseModal3();
@@ -1840,7 +1909,8 @@ const UserHomeContent = ({ showFilterModal, setFilterModal, setFilter }) => {
                             handleWalletPayment("WALLET");
                         }}
                         parallelButtonPress2={() => {
-                            payPalWebviewNav();
+                            refRBSheet.current.open()
+                            //payPalWebviewNav();
                             //openPaymentSheet(100, handleWalletPayment, 'user@gmail.com', 'usd', 'Test User')
                             //setOverlayOpened(true);
                             handleCloseModal3();
@@ -1866,6 +1936,8 @@ const UserHomeContent = ({ showFilterModal, setFilterModal, setFilter }) => {
                     />
 
                     {isOverlayOpened && Overlay()}
+
+                    {renderPaymentMethodSheet()}
 
                 </SafeAreaView>
                 :
@@ -2127,6 +2199,24 @@ const styles = StyleSheet.create({
         fontFamily: fonts.fontsType.medium,
         fontSize: scaleHeight(16),
         color: theme.dark.white
+    },
+    wrapper: {
+        backgroundColor: 'rgba(128, 128, 128, 0.80)',
+    },
+    sheetContainer: {
+        padding: 20,
+        borderRadius: 20,
+        marginBottom: 20,
+        width: '90%',
+        alignSelf: 'center',
+    },
+    paymentButton: {
+        justifyContent: 'center',
+        alignItems: 'center',
+    },
+    paymentText: {
+        fontFamily: fonts.fontsType.regular,
+        fontSize: scaleHeight(16),
     },
 });
 

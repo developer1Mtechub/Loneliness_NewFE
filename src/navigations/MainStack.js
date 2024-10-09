@@ -2,7 +2,7 @@ import React from 'react';
 import { createStackNavigator } from '@react-navigation/stack';
 import BottomTabNavigator from './BottomTabBar';
 import { SCREENS } from '../constant/constants';
-import { BuddyProfileDetail, BuddySendRequest, BuddyServiceDetails, ChangeLocation, ChangePassword, DeleteAccount, GeneralChat, ImageViewer, MyLikes, MyWallet, NotificationSetting, Notifications, PayPalWebview, PaymentCancellation, PolicyAndTerms, Premium, RateBuddy, Rating, ReportBuddy, SearchServices, SendRequest, ServiceDetails, UpdateBuddyProfile, UpdateInterests, UpdateLanguages, UpdateRate, UpdateUserProfile, UserLikesDetail, UserProfileDetail, UserServiceDetails } from '..'
+import { BuddyProfileDetail, BuddySendRequest, BuddyServiceDetails, ChangeLocation, ChangePassword, DeleteAccount, GeneralChat, ImageViewer, MyLikes, MyLikesDislikes, MyWallet, NotificationSetting, Notifications, PayPalWebview, PaymentCancellation, PolicyAndTerms, Premium, RateBuddy, Rating, ReportBuddy, SearchServices, SendRequest, ServiceDetails, UpdateBuddyProfile, UpdateInterests, UpdateLanguages, UpdateRate, UpdateUserProfile, UserLikesDetail, UserProfileDetail, UserServiceDetails } from '..'
 
 
 const Stack = createStackNavigator();
@@ -42,6 +42,7 @@ const MainStack = () => {
             <Stack.Screen name={SCREENS.DELETE_ACCOUNT} component={DeleteAccount} />
             <Stack.Screen name={SCREENS.UPDATE_RATE} component={UpdateRate} />
             <Stack.Screen name={SCREENS.PAYPAL_WEBVIEW} component={PayPalWebview} />
+            <Stack.Screen name={SCREENS.MY_LIKES_DISLIKES} component={MyLikesDislikes} />
         </Stack.Navigator>
     );
 };

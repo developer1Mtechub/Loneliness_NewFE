@@ -1,6 +1,4 @@
-// authSlice.js
 import { createSlice, createAsyncThunk } from '@reduxjs/toolkit';
-import makeRequest from '../../configs/makeRequest';
 import { API_BASE_URL_PAYMENT } from '@env'
 
 const initialState = {
@@ -9,18 +7,18 @@ const initialState = {
     error: null,
 };
 
-
-export const withdrawAmount = createAsyncThunk(
-    'withdrawAmount/withdrawAmount',
+export const walletPayoutCheck = createAsyncThunk(
+    'walletPayoutCheck/walletPayoutCheck',
     async (payload, { getState, rejectWithValue }) => {
         try {
             const { auth } = getState();
             const token = `Bearer ${auth.token}`;
-            const response = await fetch(`${API_BASE_URL_PAYMENT}/withdraw-amount`, {
+
+            const response = await fetch(`${API_BASE_URL_PAYMENT}/payout-check`, {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',
-                    
+                    Authorization: token,
                 },
                 body: JSON.stringify(payload),
             });
@@ -37,39 +35,26 @@ export const withdrawAmount = createAsyncThunk(
     }
 );
 
-// export const withdrawAmount = createAsyncThunk(
-//     'withdrawAmount/withdrawAmount',
-//     async (payload, { getState, rejectWithValue }) => {
-//         try {
-//             const { auth } = getState();
-//             const token = `Bearer ${auth.token}`
-//             const data = await makeRequest('POST', '/payments/services/withdraw/buddy', payload, null, token);
-//             return data;
-//         } catch (error) {
-//             return error
-//         }
-//     }
-// );
 
-const withdrawAmountSlice = createSlice({
-    name: 'withdrawAmount',
+const walletPayoutCheckSlice = createSlice({
+    name: 'walletPayoutCheck',
     initialState,
     reducers: {},
     extraReducers: (builder) => {
         builder
-            .addCase(withdrawAmount.pending, (state) => {
+            .addCase(walletPayoutCheck.pending, (state) => {
                 state.loading = true;
                 state.error = null;
             })
-            .addCase(withdrawAmount.fulfilled, (state, action) => {
+            .addCase(walletPayoutCheck.fulfilled, (state, action) => {
                 state.loading = false;
                 state.response = action.payload;
             })
-            .addCase(withdrawAmount.rejected, (state, action) => {
+            .addCase(walletPayoutCheck.rejected, (state, action) => {
                 state.loading = false;
                 state.error = action.payload;
             });
     },
 });
 
-export default withdrawAmountSlice.reducer;
+export default walletPayoutCheckSlice.reducer;
